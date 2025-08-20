@@ -25,7 +25,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/run", (req, res) => {
-  exec("node labour.cjs", (error, stdout, stderr) => {
+  exec("node runall.cjs", (error, stdout, stderr) => {
     if (error) {
       console.error(`❌ Error: ${error.message}`);
       return res.status(500).send("Error running script");
