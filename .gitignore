@@ -1,0 +1,10 @@
+node_modules
+.env
+"nrega-scraper.json" 
+"nrega-scraper.json" 
+nrega-scraper.json 
+# Ignore secrets
+*.json
+*.base64
+creds.txt
+

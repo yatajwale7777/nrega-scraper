@@ -1,0 +1,31 @@
+name: Run NREGA Scraper
+
+on:
+  schedule:
+    - cron: "30 1 * * *"  # Roz subah 7:00 AM IST (1:30 UTC)
+  workflow_dispatch:       # Manual run option
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Rename nrega-scraper.json to package.json
+        run: mv nrega-scraper.json package.json
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Set up Google credentials
+        run: echo "${{ secrets.GOOGLE_CREDENTIALS_BASE64 }}" | base64 --decode > key.json
+
+      - name: Run scraper
+        run: node labour.cjs
