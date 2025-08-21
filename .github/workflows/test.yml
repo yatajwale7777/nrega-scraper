@@ -19,4 +19,4 @@ jobs:
           node-version: 18
 
       - name: Run script
-        run: node runall.cjs
+        run: node A1.cjs
