@@ -1,20 +1,20 @@
-name: Run A1.cjs
+name: Run A1.cjs Scraper
 
 on:
-  workflow_dispatch:   # Manual run
+  workflow_dispatch:
   schedule:
-    - cron: "0 7 * * *"   # Roz subah 7 baje chalega (UTC time)
+    - cron: "0 4 * * *" # daily at 04:00 UTC
 
 jobs:
-  run-cjs:
+  run-scraper:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20
 
@@ -22,4 +22,6 @@ jobs:
         run: npm install
 
       - name: Run A1.cjs
+        env:
+          GOOGLE_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_CREDENTIALS_BASE64 }}
         run: node A1.cjs
