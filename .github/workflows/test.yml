@@ -19,4 +19,4 @@ jobs:
           node-version: 18
 
       - name: Run script
-        run: node hello.js
+        run: node runall.cjs
