@@ -1,4 +1,4 @@
-name: Test Node Script
+name: Run A1 Script
 
 on:
   push:
@@ -9,6 +9,7 @@ on:
 jobs:
   run-script:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -18,5 +19,8 @@ jobs:
         with:
           node-version: 18
 
-      - name: Run script
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run A1.cjs
         run: node A1.cjs
