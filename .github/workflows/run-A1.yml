@@ -1,0 +1,25 @@
+name: Run A1.cjs
+
+on:
+  workflow_dispatch:   # Manual run
+  schedule:
+    - cron: "0 7 * * *"   # Roz subah 7 baje chalega (UTC time)
+
+jobs:
+  run-cjs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run A1.cjs
+        run: node A1.cjs
