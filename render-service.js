@@ -2,15 +2,13 @@ import fetch from "node-fetch";
 import dotenv from "dotenv";
 dotenv.config();
 
-// Your Render API key
 const RENDER_API_KEY = process.env.RENDER_API_KEY;
-const OWNER_ID = process.env.RENDER_OWNER_ID; // <-- Add this
+const OWNER_ID = process.env.RENDER_OWNER_ID; // <- Add this
 
-// Replace these with your project/service details
 const SERVICE_NAME = "nrega-scraper-temp";
-const REGION = "o5"; // example region code
-const PLAN = "free"; // free plan
-const BRANCH = "main"; // branch of your GitHub repo
+const REGION = "o5";
+const PLAN = "free";
+const BRANCH = "main";
 
 async function createService() {
   const res = await fetch("https://api.render.com/v1/services", {
@@ -22,7 +20,7 @@ async function createService() {
     body: JSON.stringify({
       name: SERVICE_NAME,
       type: "web_service",
-      ownerId: OWNER_ID, // <-- Add here
+      ownerId: OWNER_ID,   // <- include here
       repo: "your_github_username/nrega-scraper",
       branch: BRANCH,
       plan: PLAN,
@@ -40,4 +38,9 @@ async function createService() {
   return data.id;
 }
 
-// rest of code remains same
+async function main() {
+  const serviceId = await createService();
+  console.log("Service ID:", serviceId);
+}
+
+main();
