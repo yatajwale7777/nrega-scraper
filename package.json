@@ -19,14 +19,14 @@
   "main": "server.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yatajwale7777/nrega-scraper.git"
+    "url": "git+https://github.com/irfanqureshi7777/nrega-scraper.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/yatajwale7777/nrega-scraper/issues"
+    "url": "https://github.com/irfanqureshi7777/nrega-scraper/issues"
   },
-  "homepage": "https://github.com/yatajwale7777/nrega-scraper#readme",
+  "homepage": "https://github.com/irfanqureshi7777/nrega-scraper#readme",
   "description": ""
 }
