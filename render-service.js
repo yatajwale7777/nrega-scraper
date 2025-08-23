@@ -4,6 +4,7 @@ dotenv.config();
 
 // Your Render API key
 const RENDER_API_KEY = process.env.RENDER_API_KEY;
+const OWNER_ID = process.env.RENDER_OWNER_ID; // <-- Add this
 
 // Replace these with your project/service details
 const SERVICE_NAME = "nrega-scraper-temp";
@@ -21,6 +22,7 @@ async function createService() {
     body: JSON.stringify({
       name: SERVICE_NAME,
       type: "web_service",
+      ownerId: OWNER_ID, // <-- Add here
       repo: "your_github_username/nrega-scraper",
       branch: BRANCH,
       plan: PLAN,
@@ -38,29 +40,4 @@ async function createService() {
   return data.id;
 }
 
-async function deleteService(serviceId) {
-  const res = await fetch(`https://api.render.com/v1/services/${serviceId}`, {
-    method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${RENDER_API_KEY}`,
-    },
-  });
-
-  if (res.status === 204) {
-    console.log("✅ Service deleted successfully!");
-  } else {
-    const data = await res.json();
-    console.error("❌ Failed to delete service:", data);
-  }
-}
-
-async function main() {
-  const serviceId = await createService();
-
-  console.log("🕐 Waiting for 5 minutes before deleting...");
-  setTimeout(async () => {
-    await deleteService(serviceId);
-  }, 5 * 60 * 1000); // 5 minutes wait
-}
-
-main();
+// rest of code remains same
