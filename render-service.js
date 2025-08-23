@@ -1,16 +1,20 @@
 import fetch from "node-fetch";
 import dotenv from "dotenv";
-dotenv.config();
+
+dotenv.config(); // Must be first
 
 // Environment variables from .env
 const RENDER_API_KEY = process.env.RENDER_API_KEY;
 const OWNER_ID = process.env.RENDER_OWNER_ID; // Render owner ID
 
+console.log("RENDER_API_KEY:", RENDER_API_KEY);
+console.log("OWNER_ID:", OWNER_ID);
+
 // Service configuration
 const SERVICE_NAME = "nrega-scraper-temp";
-const REGION = "o5"; // Example region code
-const PLAN = "free"; // Plan type
-const BRANCH = "main"; // GitHub branch
+const REGION = "oregon"; // Valid Render region
+const PLAN = "free";     // Plan type
+const BRANCH = "main";   // GitHub branch
 
 async function createService() {
   try {
@@ -23,13 +27,18 @@ async function createService() {
       body: JSON.stringify({
         name: SERVICE_NAME,
         type: "web_service",
-        ownerId: OWNER_ID,               // Owner ID must be included
-        repo: "yatajwale7777/nrega-scraper", // <-- Replace with your GitHub username
+        ownerId: OWNER_ID,  
+        repo: "https://github.com/yatajwale7777/nrega-scraper", 
         branch: BRANCH,
         plan: PLAN,
         serviceDetails: {
           env: "node",
           region: REGION,
+          envSpecificDetails: {
+            version: "22",                // Node.js version
+            buildCommand: "npm install",  // <-- ye add karna jaruri hai
+            startCommand: "node runall.cjs" // Entry point
+          }
         },
         env: {
           GOOGLE_CREDENTIALS_BASE64: process.env.GOOGLE_CREDENTIALS_BASE64,
