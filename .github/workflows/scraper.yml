@@ -1,31 +1,30 @@
-name: Run NREGA Scraper
+name: Daily NREGA Scraper
 
 on:
   schedule:
-    - cron: "30 1 * * *"  # Roz subah 7:00 AM IST (1:30 UTC)
-  workflow_dispatch:       # Manual run option
+    - cron: "0 7 * * *"  # 7 AM India time (UTC+5:30 adjust)
+  workflow_dispatch:    # manual run option
 
 jobs:
-  build:
+  deploy-scraper:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v3
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
-
-      - name: Rename nrega-scraper.json to package.json
-        run: mv nrega-scraper.json package.json
+          node-version: '22'
 
       - name: Install dependencies
         run: npm install
 
-      - name: Set up Google credentials
-        run: echo "${{ secrets.GOOGLE_CREDENTIALS_BASE64 }}" | base64 --decode > key.json
-
-      - name: Run scraper
-        run: node labour.cjs
+      - name: Run scraper & deploy service
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          GOOGLE_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_CREDENTIALS_BASE64 }}
+          PROXY_SERVER: ${{ secrets.PROXY_SERVER }}
+          PROXY_USER: ${{ secrets.PROXY_USER }}
+          PROXY_PASS: ${{ secrets.PROXY_PASS }}
+        run: node deploy_and_scrape.cjs
