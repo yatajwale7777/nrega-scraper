@@ -1,6 +1,7 @@
 {
   "name": "nrega-scraper",
   "version": "1.0.0",
+  "type": "module",  // <-- add this line
   "scripts": {
     "start": "node server.js"
   },
