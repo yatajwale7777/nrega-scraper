@@ -1,56 +1,75 @@
-const { exec } = require("child_process");
-const auth = require("./creds"); // JWT auth client from creds.js
+// runall.cjs
+// Sequentially runs scripts from ./scripts and logs results to Google Sheet.
+// Expects env: GOOGLE_CREDENTIALS_BASE64, SHEET_ID, [SHEET_TAB]
 
-// List of scripts to run sequentially
-const filesToRun = [
+const { spawnSync } = require('child_process');
+const path = require('path');
+const { appendRows } = require('./lib/sheets');
+
+// Ordered list provided by user
+const scripts = [
   "trakingfile.cjs",
   "A1.cjs",
   "labour.cjs",
   "master.cjs",
   "link.cjs",
   "achiv.cjs",
-  "works.cjs",
+  "works.cjs"
 ];
 
-// Delay utility
-function wait(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+function nowISO() {
+  return new Date().toISOString();
 }
 
-// Run one script
-function runScript(file) {
-  return new Promise((resolve, reject) => {
-    console.log(`\n▶ Running: ${file}`);
-    const process = exec(`node ${file}`, { stdio: "inherit" });
-
-    process.stdout?.on("data", data => process.stdout.write(data));
-    process.stderr?.on("data", data => process.stderr.write(data));
-
-    process.on("exit", code => {
-      if (code === 0) {
-        console.log(`✅ Finished: ${file}`);
-        resolve();
-      } else {
-        console.error(`❌ Failed: ${file}`);
-        reject(new Error(`${file} failed with code ${code}`));
-      }
-    });
-  });
+function runOne(script) {
+  const full = path.join(__dirname, 'scripts', script);
+  const start = Date.now();
+  const res = spawnSync(process.execPath, [full], { encoding: 'utf8' });
+  const end = Date.now();
+  const ok = res.status === 0;
+  return {
+    script,
+    ok,
+    code: res.status,
+    durationMs: end - start,
+    stdout: (res.stdout || '').trim().slice(0, 1000),
+    stderr: (res.stderr || '').trim().slice(0, 1000)
+  };
 }
 
-// Run all scripts sequentially with delay
-async function runAll() {
-  for (const file of filesToRun) {
-    try {
-      await runScript(file);
-      await wait(3000); // ⏱ Add 3-second delay between scripts
-    } catch (err) {
-      console.error(`⚠️ Error running ${file}:`, err.message);
-    }
+(async () => {
+  console.log("🚀 Starting run at", nowISO());
+  const perScriptRows = [];
+  const results = [];
+  for (const s of scripts) {
+    console.log(`▶ Running ${s} ...`);
+    const r = runOne(s);
+    results.push(r);
+    console.log(r.ok ? `✅ ${s} OK in ${r.durationMs}ms` : `❌ ${s} FAIL code=${r.code} in ${r.durationMs}ms`);
+    // Prepare row: [timestamp, script, status, ms, note]
+    perScriptRows.push([nowISO(), s, r.ok ? "OK" : "FAIL", r.durationMs, r.ok ? r.stdout : r.stderr]);
   }
 
-  console.log("\n🎉 All scripts finished!");
-}
+  // Overall summary row
+  const allOk = results.every(r => r.ok);
+  const totalMs = results.reduce((a, b) => a + b.durationMs, 0);
+  const summary = [nowISO(), "SUMMARY", allOk ? "ALL_OK" : "HAS_FAIL", totalMs, `${results.filter(r=>r.ok).length}/${results.length} passed`];
 
-// Start
-runAll();
+  try {
+    await appendRows([
+      ["Timestamp", "Script", "Status", "Duration(ms)", "Note"], // header (optional; sheets will accept duplicates)
+      ...perScriptRows,
+      summary
+    ]);
+    console.log("📊 Logged to Google Sheet.");
+  } catch (e) {
+    console.error("⚠️ Failed to log to Google Sheet:", e.message);
+  }
+
+  console.log("🏁 Done at", nowISO());
+  // Exit with non-zero if any failed (useful for CI)
+  process.exit(allOk ? 0 : 1);
+})().catch(err => {
+  console.error("Fatal:", err);
+  process.exit(1);
+});
