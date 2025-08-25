@@ -1,21 +1,36 @@
-{					
-log: {					
-spreadsheetId: "1vi-z__fFdVhUZr3PEDjhM83kqhFtbJX0Ejcfu9M8RKo",					
-tab: "Runs"					
-},					
-targets: {					
-labour.cjs:   { "spreadsheetId": "1vi-z__fFdVhUZr3PEDjhM83kqhFtbJX0Ejcfu9M8RKo", "tab": "R6.09" },					
-achiv.cjs:   { "spreadsheetId": "1vi-z__fFdVhUZr3PEDjhM83kqhFtbJX0Ejcfu9M8RKo", "tab": "achiv" },					
-A1.cjs:      { "spreadsheetId": "1vi-z__fFdVhUZr3PEDjhM83kqhFtbJX0Ejcfu9M8RKo", "tab": "R1.1" },					
-					
-link.cjs:    { "spreadsheetId": "1bsS9b0FDjzPghhAfMW0YRsTdNnKdN6QMC6TS8vxlsJg", "tab": "Sheet2" },					
-master.cjs:  { "spreadsheetId": "1D1rgIY_KhL_F86WnCE6ey-0p07Fd8jMvhX3iGOFHpO0", "tab": "Sheet5" },					
-trakingfile.cjs: { "spreadsheetId": "1D1rgIY_KhL_F86WnCE6ey-0p07Fd8jMvhX3iGOFHpO0", "tab": "data" },					
-works.cjs: { "spreadsheetId": "1bsS9b0FDjzPghhAfMW0YRsTdNnKdN6QMC6TS8vxlsJg", "tab": "Sheet5" },					
-works.cjs:      { "spreadsheetId": "1bsS9b0FDjzPghhAfMW0YRsTdNnKdN6QMC6TS8vxlsJg", "tab": "Sheet3" }					
-					
-/* जरूरत हो तो और भी mapping जोड़ सकते हैं:					
-some.cjs: { "spreadsheetId": "1bsS9...", "tab": "Sheet5" }					
-*/					
-}					
-}					
+{
+  "log": {
+    "spreadsheetId": "1vi-z__fFdVhUZr3PEDjhM83kqhFtbJX0Ejcfu9M8RKo",
+    "tab": "Runs"
+  },
+  "targets": {
+    "labour.cjs": {
+      "spreadsheetId": "1vi-z__fFdVhUZr3PEDjhM83kqhFtbJX0Ejcfu9M8RKo",
+      "tab": "R6.09"
+    },
+    "achiv.cjs": {
+      "spreadsheetId": "1vi-z__fFdVhUZr3PEDjhM83kqhFtbJX0Ejcfu9M8RKo",
+      "tab": "achiv"
+    },
+    "A1.cjs": {
+      "spreadsheetId": "1vi-z__fFdVhUZr3PEDjhM83kqhFtbJX0Ejcfu9M8RKo",
+      "tab": "R1.1"
+    },
+    "link.cjs": {
+      "spreadsheetId": "1bsS9b0FDjzPghhAfMW0YRsTdNnKdN6QMC6TS8vxlsJg",
+      "tab": "Sheet2"
+    },
+    "master.cjs": {
+      "spreadsheetId": "1D1rgIY_KhL_F86WnCE6ey-0p07Fd8jMvhX3iGOFHpO0",
+      "tab": "Sheet5"
+    },
+    "trakingfile.cjs": {
+      "spreadsheetId": "1D1rgIY_KhL_F86WnCE6ey-0p07Fd8jMvhX3iGOFHpO0",
+      "tab": "data"
+    },
+    "works.cjs": {
+      "spreadsheetId": "1bsS9b0FDjzPghhAfMW0YRsTdNnKdN6QMC6TS8vxlsJg",
+      "tab": "Sheet3"
+    }
+  }
+}
