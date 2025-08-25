@@ -1,5 +1,10 @@
 name: Render On-Demand
-
+jobs:
+  disabled:
+    if: false
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "disabled"
 on:
   workflow_dispatch:
   schedule:
