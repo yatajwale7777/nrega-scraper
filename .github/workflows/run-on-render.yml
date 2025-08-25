@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Ensure jq installed
         run: sudo apt-get update && sudo apt-get install -y jq
 
@@ -22,6 +23,7 @@ jobs:
           set -euo pipefail
           PAYLOAD=$(cat <<'JSON'
           {
+            "ownerId": "${{ secrets.RENDER_OWNER_ID }}",
             "serviceDetails": {
               "name": "nrega-script",
               "type": "web",
@@ -31,17 +33,25 @@ jobs:
               "startCommand": "npm start"
             },
             "envVars": [
-              {"key":"SHEET_ID","value":"${{ secrets.SHEET_ID }}"},
-              {"key":"SHEET_TAB","value":"${{ secrets.SHEET_TAB }}"},
-              {"key":"GOOGLE_CREDENTIALS_BASE64","value":"${{ secrets.GOOGLE_CREDENTIALS_BASE64 }}"}
+              { "key": "GOOGLE_CREDENTIALS_BASE64", "value": "${{ secrets.GOOGLE_CREDENTIALS_BASE64 }}" },
+              { "key": "HTTP_PROXY", "value": "${{ secrets.HTTP_PROXY }}" },
+              { "key": "HTTPS_PROXY", "value": "${{ secrets.HTTPS_PROXY }}" },
+              { "key": "PROXY_USER", "value": "${{ secrets.PROXY_USER }}" },
+              { "key": "PROXY_PASS", "value": "${{ secrets.PROXY_PASS }}" }
             ],
             "repo": {
-              "url": "${{ github.server_url }}/${{ github.repository }}"
+              "url": "${{ github.server_url }}/${{ github.repository }}",
+              "branch": "${{ github.ref_name }}"
             }
           }
           JSON
           )
-          RESP=$(curl -fsS -X POST https://api.render.com/v1/services             -H "Authorization: Bearer ${RENDER_API_KEY}"             -H "Content-Type: application/json"             -d "$PAYLOAD")
+
+          RESP=$(curl -fsS -X POST "https://api.render.com/v1/services" \
+            -H "Authorization: Bearer ${RENDER_API_KEY}" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD")
+
           echo "$RESP" | jq .
           echo "SERVICE_ID=$(echo "$RESP" | jq -r .id)" >> $GITHUB_ENV
 
@@ -54,7 +64,8 @@ jobs:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
         run: |
           if [ -n "${{ env.SERVICE_ID }}" ]; then
-            curl -fsS -X DELETE https://api.render.com/v1/services/${{ env.SERVICE_ID }}               -H "Authorization: Bearer ${RENDER_API_KEY}"
+            curl -fsS -X DELETE "https://api.render.com/v1/services/${{ env.SERVICE_ID }}" \
+              -H "Authorization: Bearer ${RENDER_API_KEY}"
             echo "Deleted service ${{ env.SERVICE_ID }}"
           else
             echo "No SERVICE_ID to delete."
