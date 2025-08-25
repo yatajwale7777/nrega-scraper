@@ -1,14 +1,19 @@
 {
   "name": "nrega-scraper",
   "version": "1.0.0",
+  "private": true,
   "type": "commonjs",
   "main": "runall.cjs",
   "scripts": {
     "start": "node runall.cjs"
   },
   "dependencies": {
-    "googleapis": "^131.0.0",
     "axios": "^1.7.0",
-    "cheerio": "^1.0.0"
+    "cheerio": "^1.0.0",
+    "googleapis": "^131.0.0",
+    "puppeteer": "^22.0.0"
+  },
+  "engines": {
+    "node": ">=18.17"
   }
 }
