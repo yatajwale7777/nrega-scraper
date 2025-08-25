@@ -2,8 +2,7 @@ name: Trigger Render Redeploy
 
 on:
   schedule:
-    # रोज़ सुबह 7:00 AM IST → 01:30 UTC
-    - cron: "30 1 * * *"
+    - cron: "30 1 * * *"   # 07:00 IST
   workflow_dispatch:
 
 jobs:
