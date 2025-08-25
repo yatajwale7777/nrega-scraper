@@ -30,7 +30,8 @@
     },
     "works.cjs": {
       "spreadsheetId": "1bsS9b0FDjzPghhAfMW0YRsTdNnKdN6QMC6TS8vxlsJg",
-      "tab": "Sheet3"
+      "readTab": "Sheet3",
+      "writeTab": "Sheet5"
     }
   }
 }
