@@ -1,12 +1,9 @@
 // runall.cjs
-// Sequentially runs scripts from ./scripts and logs results to Google Sheet.
-// Expects env: GOOGLE_CREDENTIALS_BASE64, SHEET_ID, [SHEET_TAB]
-
-const { spawnSync } = require('child_process');
+const fs = require('fs');
 const path = require('path');
-const { appendRows } = require('./lib/sheets');
+const { spawnSync } = require('child_process');
+const { appendRowsTo } = require('./lib/sheets');
 
-// Ordered list provided by user
 const scripts = [
   "trakingfile.cjs",
   "A1.cjs",
@@ -17,8 +14,20 @@ const scripts = [
   "works.cjs"
 ];
 
-function nowISO() {
-  return new Date().toISOString();
+function nowISO() { return new Date().toISOString(); }
+
+// Load config
+const cfgPath = path.join(__dirname, 'config', 'targets.json');
+if (!fs.existsSync(cfgPath)) {
+  console.error("Missing config/targets.json");
+  process.exit(1);
+}
+const cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+const LOG_ID = cfg?.log?.spreadsheetId;
+const LOG_TAB = cfg?.log?.tab || 'Runs';
+if (!LOG_ID) {
+  console.error("log.spreadsheetId missing in config/targets.json");
+  process.exit(1);
 }
 
 function runOne(script) {
@@ -28,9 +37,7 @@ function runOne(script) {
   const end = Date.now();
   const ok = res.status === 0;
   return {
-    script,
-    ok,
-    code: res.status,
+    script, ok, code: res.status,
     durationMs: end - start,
     stdout: (res.stdout || '').trim().slice(0, 1000),
     stderr: (res.stderr || '').trim().slice(0, 1000)
@@ -38,36 +45,44 @@ function runOne(script) {
 }
 
 (async () => {
-  console.log("🚀 Starting run at", nowISO());
-  const perScriptRows = [];
+  console.log("🚀 Run start:", nowISO());
+
+  // Optional header once (Sheet allow duplicates; harmless)
+  const header = [["Timestamp","Script","Status","Duration(ms)","Note"]];
+  try { await appendRowsTo(LOG_ID, LOG_TAB, header); } catch {}
+
   const results = [];
   for (const s of scripts) {
     console.log(`▶ Running ${s} ...`);
     const r = runOne(s);
     results.push(r);
-    console.log(r.ok ? `✅ ${s} OK in ${r.durationMs}ms` : `❌ ${s} FAIL code=${r.code} in ${r.durationMs}ms`);
-    // Prepare row: [timestamp, script, status, ms, note]
-    perScriptRows.push([nowISO(), s, r.ok ? "OK" : "FAIL", r.durationMs, r.ok ? r.stdout : r.stderr]);
+
+    // Central log
+    const logRow = [[ nowISO(), s, r.ok ? "OK":"FAIL", r.durationMs, r.ok ? r.stdout : r.stderr ]];
+    try {
+      await appendRowsTo(LOG_ID, LOG_TAB, logRow);
+      console.log("  ↳ Logged to Runs");
+    } catch (e) {
+      console.error("  ↳ Log failed:", e.message);
+    }
+
+    // Heartbeat to target (if mapped)
+    const tgt = cfg.targets?.[s];
+    if (tgt?.spreadsheetId && tgt?.tab) {
+      const hb = [[ nowISO(), "RUN", s, r.ok ? "OK":"FAIL", r.durationMs ]];
+      try {
+        await appendRowsTo(tgt.spreadsheetId, tgt.tab, hb);
+        console.log(`  ↳ Heartbeat to ${tgt.tab}`);
+      } catch (e) {
+        console.error(`  ↳ Heartbeat failed for ${tgt.tab}:`, e.message);
+      }
+    }
+
+    console.log(r.ok ? `✅ ${s} OK (${r.durationMs}ms)` : `❌ ${s} FAIL code=${r.code} (${r.durationMs}ms)`);
   }
 
-  // Overall summary row
   const allOk = results.every(r => r.ok);
-  const totalMs = results.reduce((a, b) => a + b.durationMs, 0);
-  const summary = [nowISO(), "SUMMARY", allOk ? "ALL_OK" : "HAS_FAIL", totalMs, `${results.filter(r=>r.ok).length}/${results.length} passed`];
-
-  try {
-    await appendRows([
-      ["Timestamp", "Script", "Status", "Duration(ms)", "Note"], // header (optional; sheets will accept duplicates)
-      ...perScriptRows,
-      summary
-    ]);
-    console.log("📊 Logged to Google Sheet.");
-  } catch (e) {
-    console.error("⚠️ Failed to log to Google Sheet:", e.message);
-  }
-
-  console.log("🏁 Done at", nowISO());
-  // Exit with non-zero if any failed (useful for CI)
+  console.log("🏁 Done:", nowISO(), "Status:", allOk ? "ALL_OK":"HAS_FAIL");
   process.exit(allOk ? 0 : 1);
 })().catch(err => {
   console.error("Fatal:", err);
