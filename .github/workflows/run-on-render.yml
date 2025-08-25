@@ -34,10 +34,14 @@ jobs:
             },
             "envVars": [
               { "key": "GOOGLE_CREDENTIALS_BASE64", "value": "${{ secrets.GOOGLE_CREDENTIALS_BASE64 }}" },
-              { "key": "HTTP_PROXY", "value": "${{ secrets.HTTP_PROXY }}" },
-              { "key": "HTTPS_PROXY", "value": "${{ secrets.HTTPS_PROXY }}" },
-              { "key": "PROXY_USER", "value": "${{ secrets.PROXY_USER }}" },
-              { "key": "PROXY_PASS", "value": "${{ secrets.PROXY_PASS }}" }
+
+              // 👇 Proxy mapping: PROXY_SERVER → HTTP(S)_PROXY
+              { "key": "HTTP_PROXY",  "value": "${{ secrets.PROXY_SERVER }}" },
+              { "key": "HTTPS_PROXY", "value": "${{ secrets.PROXY_SERVER }}" },
+
+              // (optional) auth creds — रखें अगर proxy auth है
+              { "key": "PROXY_USER",  "value": "${{ secrets.PROXY_USER }}" },
+              { "key": "PROXY_PASS",  "value": "${{ secrets.PROXY_PASS }}" }
             ],
             "repo": {
               "url": "${{ github.server_url }}/${{ github.repository }}",
