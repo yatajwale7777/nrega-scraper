@@ -1,6 +1,7 @@
 // scripts/diag.cjs
+const path = require('path');
+const fs = require('fs');
 const { updateRange } = require('../lib/sheets');
-const fs = require('fs'); const path = require('path');
 
 function loadTargets() {
   const p = path.join(__dirname, '..', 'config', 'targets.json');
@@ -9,29 +10,39 @@ function loadTargets() {
   return j.targets || {};
 }
 
+function decodeSA() {
+  try {
+    const b64 = process.env.GOOGLE_CREDENTIALS_BASE64 || '';
+    const json = Buffer.from(b64, 'base64').toString('utf8');
+    const sa = JSON.parse(json);
+    return sa.client_email || '(no client_email)';
+  } catch (e) { return '(decode failed)'; }
+}
+
 (async () => {
-  const t = loadTargets();
+  console.log('🔎 DIAG: service account:', decodeSA());
+  const targets = loadTargets();
+  const stamp = new Date().toISOString();
+
   const tests = [];
-  for (const [name, v] of Object.entries(t)) {
-    if (name === 'works.cjs') {
-      const sid = v.spreadsheetId;
-      const tab = v.writeTab || v.tab || 'Sheet5';
-      tests.push({ name, spreadsheetId: sid, tab });
-    } else {
-      tests.push({ name, spreadsheetId: v.spreadsheetId, tab: v.tab });
-    }
+  for (const [name, cfg] of Object.entries(targets)) {
+    if (!cfg) continue;
+    const spreadsheetId = cfg.spreadsheetId;
+    const tab = cfg.writeTab || cfg.tab; // works.cjs has writeTab
+    if (spreadsheetId && tab) tests.push({ name, spreadsheetId, tab });
   }
 
-  const stamp = new Date().toISOString();
-  for (const x of tests) {
-    if (!x.spreadsheetId || !x.tab) { console.log('SKIP', x); continue; }
+  for (const t of tests) {
     try {
-      console.log('→ TEST write', x.name, x.spreadsheetId, x.tab);
-      await updateRange(x.spreadsheetId, `${x.tab}!A1`, [[`diag ${x.name} ${stamp}`]], 'RAW');
-      console.log('✅ OK', x.name);
+      console.log(`→ TEST write: ${t.name}  sheet=${t.spreadsheetId} tab=${t.tab}`);
+      await updateRange(t.spreadsheetId, `${t.tab}!A1`, [[`diag ${t.name} ${stamp}`]], 'RAW');
+      console.log(`✅ OK: ${t.name}`);
     } catch (e) {
-      const msg = e?.errors?.[0]?.message || e?.response?.data?.error?.message || e?.message || String(e);
-      console.error('❌ FAIL', x.name, '::', msg);
+      const msg =
+        e?.errors?.[0]?.message ||
+        e?.response?.data?.error?.message ||
+        e?.message || String(e);
+      console.error(`❌ FAIL: ${t.name} :: ${msg}`);
     }
   }
   process.exit(0);
