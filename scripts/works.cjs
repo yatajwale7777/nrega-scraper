@@ -1,3 +1,5 @@
+// test update 2025-08-26
+
 // scripts/works.cjs
 const { readRange, updateRange, clearRange } = require('../lib/sheets');
 const axios = require('../lib/http');
