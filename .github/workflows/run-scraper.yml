@@ -1,9 +1,9 @@
 name: Run NREGA scraper (no deploy)
 
 on:
-  workflow_dispatch:        # manually run from Actions tab
+  workflow_dispatch:          # manual run from Actions tab
   schedule:
-    - cron: "0 2 * * *"     # रोज़ 07:30 IST (02:00 UTC)
+    - cron: "0 2 * * *"       # ~07:30 IST daily (02:00 UTC)
 
 jobs:
   run:
@@ -14,27 +14,41 @@ jobs:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           SERVICE_ID: srv-d2m0o3n5r7bs73e6oc20
         run: |
+          set -e
           curl -fsS -X POST "https://api.render.com/v1/services/$SERVICE_ID/resume" \
             -H "Authorization: Bearer $RENDER_API_KEY" || true
-          # wait until health is up (max ~3 min)
+          # wait until /health responds (max ~3 min)
           for i in {1..18}; do
             if curl -fsS "https://nrega-render.onrender.com/health" >/dev/null; then
-              echo "Service healthy"; break
+              echo "Service healthy"
+              break
             fi
             echo "Waiting for health..."; sleep 10
           done
 
-      - name: Trigger /run
+      - name: Trigger /run and wait for completion
+        id: runjob
         run: |
-          curl -fsS "https://nrega-render.onrender.com/run" || exit 1
-          # optional: wait until job finishes (poll health)
+          set -e
+          echo "Start run"
+          curl -fsS "https://nrega-render.onrender.com/run" | tee /dev/stderr
+          # poll /health until isRunning=false (max ~10 mins)
           for i in {1..60}; do
             out=$(curl -fsS "https://nrega-render.onrender.com/health" || true)
             echo "$out"
             echo "$out" | grep -q '"isRunning":false' && break
             sleep 10
           done
+          # extract lastStatus
+          status=$(curl -fsS "https://nrega-render.onrender.com/health" | sed -n 's/.*"lastStatus":"\([^"]*\)".*/\1/p')
+          echo "lastStatus=$status"
+          echo "lastStatus=$status" >> "$GITHUB_OUTPUT"
+          # fail the workflow if job failed
+          if [ "$status" != "ALL_OK" ]; then
+            echo "Job ended with status=$status"; exit 1
+          fi
 
+      # Fallback suspend (server.cjs already auto-suspends at end)
       - name: Suspend Render (fallback)
         if: always()
         env:
