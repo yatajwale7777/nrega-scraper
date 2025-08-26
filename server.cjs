@@ -14,7 +14,7 @@ function runOnce() {
     lastStatus = code === 0 ? 'ALL_OK' : 'HAS_FAIL';
   });
 }
-runOnce();
+//runOnce();
 
 // Health endpoint ताकि Render को लगे service चल रही है
 http.createServer((req, res) => {
