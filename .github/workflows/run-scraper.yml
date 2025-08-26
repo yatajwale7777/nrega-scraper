@@ -1,0 +1,47 @@
+name: Run NREGA scraper (no deploy)
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 2 * * *"  # रोज़ 07:30 IST के आसपास (02:00 UTC adjust करें)
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resume Render service
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          SERVICE_ID: srv-d2m0o3n5r7bs73e6oc20
+        run: |
+          curl -fsS -X POST "https://api.render.com/v1/services/$SERVICE_ID/resume" \
+            -H "Authorization: Bearer $RENDER_API_KEY" || true
+          # health wait (max ~3 min)
+          for i in {1..18}; do
+            if curl -fsS "https://nrega-render.onrender.com/health" >/dev/null; then
+              echo "Service healthy"; break
+            fi
+            echo "Waiting for health..."; sleep 10
+          done
+
+      - name: Trigger /run
+        run: |
+          curl -fsS "https://nrega-render.onrender.com/run" || exit 1
+          # optional: wait till it finishes (poll health)
+          for i in {1..60}; do
+            out=$(curl -fsS "https://nrega-render.onrender.com/health" || true)
+            echo "$out"
+            echo "$out" | grep -q '"isRunning":false' && break
+            sleep 10
+          done
+
+      # No explicit suspend needed if server.cjs auto-suspends.
+      # But as a fallback:
+      - name: Suspend Render (fallback)
+        if: always()
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          SERVICE_ID: srv-d2m0o3n5r7bs73e6oc20
+        run: |
+          curl -fsS -X POST "https://api.render.com/v1/services/$SERVICE_ID/suspend" \
+            -H "Authorization: Bearer $RENDER_API_KEY" || true
