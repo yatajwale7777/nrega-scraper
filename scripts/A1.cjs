@@ -1,4 +1,5 @@
 // scripts/A1.cjs
+require('dotenv').config();  // local .env load; Render/GitHub Actions me env UI/Secrets se aayega
 
 // ---- harden errors (prints real stacktraces) ----
 process.on('unhandledRejection', e => {
