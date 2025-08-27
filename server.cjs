@@ -112,18 +112,33 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // /diag endpoint: run scripts/diag.cjs and stream logs to Render
+  // /diag endpoint: run scripts/diag.cjs; PASS (0/2) पर runall.cjs ऑटो-स्टार्ट
   if (url.pathname === '/diag') {
-    const started = spawn(process.execPath, [path.join(__dirname, 'scripts', 'diag.cjs')], {
+    const allowRun = (url.searchParams.get('run') ?? 'auto') !== '0'; // ?run=0 भेजोगे तो auto-run नहीं होगा
+    const diag = spawn(process.execPath, [path.join(__dirname, 'scripts', 'diag.cjs')], {
       env: process.env,
       stdio: ['ignore', 'inherit', 'inherit']
     });
+
+    // तुरंत 202 देकर जवाब — logs Render पर stream होंगे
     res.writeHead(202, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
-      started: !!started.pid,
-      message: 'diag started',
-      pid: started.pid
+      started: !!diag.pid,
+      pid: diag.pid,
+      autoRun: allowRun,
+      message: 'diag started; will auto-run on PASS'
     }));
+
+    diag.on('exit', (code) => {
+      console.log('🧪 diag exited with code', code);
+      // 0 = full pass, 2 = partial pass (e.g., network ok but some warns) → दोनों पर run
+      if (allowRun && (code === 0 || code === 2)) {
+        const started = runOnce();
+        console.log(started ? '▶ runall started after diag' : 'ℹ️ run already in progress');
+      } else if (code !== 0 && code !== 2) {
+        console.warn('⚠️ diag failed; not starting run.');
+      }
+    });
     return;
   }
 
@@ -138,4 +153,4 @@ server.listen(PORT, () => {
 // 👇 अगर deploy/resume होते ही job auto-start चाहिए तो इसे ON करें:
 // runOnce();
 
-// Manual trigger (/run) बेहतर है — free hours बचेंगे.
+// Manual trigger (/run या /diag) बेहतर है — free hours बचेंगे.
