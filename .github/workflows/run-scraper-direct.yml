@@ -1,0 +1,29 @@
+name: Run NREGA scraper (direct)
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 2 * * *"   # हर दिन 07:30 IST के आसपास (02:00 UTC)
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Set env
+        env:
+          GOOGLE_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_CREDENTIALS_BASE64 }}
+        run: |
+          echo "B64 set len: ${#GOOGLE_CREDENTIALS_BASE64}"
+
+      - name: Run all scripts
+        env:
+          GOOGLE_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_CREDENTIALS_BASE64 }}
+        run: node runall.cjs
