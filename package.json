@@ -1,20 +1,20 @@
 {
   "name": "nrega-scraper",
   "version": "1.0.0",
-  "private": true,
-  "type": "commonjs",
+  "description": "NREGA scraping scripts with Render-on-demand deployment",
   "main": "runall.cjs",
+  "type": "commonjs",
   "scripts": {
-    "start": "node server.cjs"
+    "start": "node server.cjs",
+    "runall": "node runall.cjs",
+    "diag": "node scripts/diag.cjs",
+    "postinstall": "npx puppeteer browsers install chrome"
   },
   "dependencies": {
-    "axios": "^1.7.0",
-    "cheerio": "^1.0.0",
+    "axios": "^1.7.7",
+    "cheerio": "^1.0.0-rc.12",
     "dotenv": "^16.4.5",
-    "googleapis": "^131.0.0",
-    "puppeteer": "^24.17.0"
-  },
-  "engines": {
-    "node": "20.x"
+    "googleapis": "^144.0.0",
+    "puppeteer": "^22.15.0"
   }
 }
