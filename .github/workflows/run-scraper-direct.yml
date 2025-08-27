@@ -3,25 +3,36 @@ name: Run NREGA scraper (direct)
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 2 * * *"   # हर दिन 07:30 IST के आसपास (02:00 UTC)
+    - cron: "0 2 * * *"   # रोज़ाना 07:30 IST (02:00 UTC)
 
 jobs:
   run:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: "20"
 
-      - name: Install deps
-        run: npm ci
-
-      - name: Set env
-        env:
-          GOOGLE_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_CREDENTIALS_BASE64 }}
+      - name: Install dependencies
         run: |
-          echo "B64 set len: ${#GOOGLE_CREDENTIALS_BASE64}"
+          npm install --legacy-peer-deps
+
+      - name: Quick NIC connectivity check
+        run: |
+          set -e
+          for U in \
+            "https://nreganarep.nic.in/netnrega/app_issue.aspx?page=b&state_code=17" \
+            "https://nreganarep.nic.in/netnrega/dpc_sms_new.aspx?lflag=eng&page=b&state_code=17" \
+            "https://nreganarep.nic.in/netnrega/dpc_sms_new_dtl.aspx?page=d&state_code=17"
+          do
+            echo "Probing: $U"
+            curl -I --max-time 20 -A "Mozilla/5.0" "$U" || echo "curl failed for $U"
+          done
 
       - name: Run all scripts
         env:
